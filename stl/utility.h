@@ -64,11 +64,77 @@ namespace hyn {
             typedef Ty1 first_type;
             typedef Ty2 second_type;
 
-            first_type first;
-            second_type second;
+            Ty1 first;
+            Ty2 second;
 
+            pair() = default;
+
+            template<typename u, typename v>
+            pair(const pair<u, v> &pr):first(pr.first), second(pr.second) {}
+
+            pair(const first_type &a, const second_type &b) : first(a), second(b) {}
+
+            pair &operator=(const pair &pr) {
+                if (this != pr) {
+                    first = pr.first;
+                    second = pr.second;
+                }
+                return *this;
+            }
+
+            void swap(pair &pr) {
+                hyn::stl::swap(first, pr.first);
+                hyn::stl::swap(second, pr.second);
+            }
 
         };
+
+        template<typename T1, typename T2>
+        bool operator==(const pair<T1, T2> &pr1, const pair<T1, T2> &pr2) {
+            return pr1.first == pr2.first && pr1.second == pr2.second;
+        }
+
+        template<typename T1, typename T2>
+        bool operator!=(const pair<T1, T2> &pr1, const pair<T1, T2> &pr2) {
+            return !(pr1 == pr2);
+        }
+
+        template<typename T1, typename T2>
+        bool operator>(const pair<T1, T2> &pr1, const pair<T1, T2> &pr2) {
+            return pr1.first > pr2.first || ((pr1.first == pr2.first) && pr1.second > pr2.second);
+        }
+
+        template<typename T1, typename T2>
+        bool operator>=(const pair<T1, T2> &pr1, const pair<T1, T2> &pr2) {
+            /*pr1 >= pr2
+             * !(pr1 < pr2)
+             * !(pr2 > pr1)
+             * */
+            return !(pr2 > pr1);
+        }
+
+        template<typename T1, typename T2>
+        bool operator<(const pair<T1, T2> &pr1, const pair<T1, T2> &pr2) {
+            /*pr1 < pr2
+             * pr2 > pr1
+             * */
+            return pr2 > pr1;
+        }
+
+        template<typename T1, typename T2>
+        bool operator<=(const pair<T1, T2> &pr1, const pair<T1, T2> &pr2) {
+            /*pr1 <= pr2
+             * !(pr1 > pr2)
+             * */
+            return !(pr1 > pr2);
+        }
+
+
+        //make_pair
+        template<typename T1, typename T2>
+        pair<T1, T2> make_pair(const T1 &t1, const T2 &t2) {
+            return pair<T1, T2>(t1, t2);
+        }
     }
 }
 
