@@ -31,6 +31,10 @@ namespace hyn {
 
             static obj *free_list[NFREELISTS];
 
+            static char *start_free;
+            static char *end_free;
+            static size_t heap_size;
+
             //上调为8的倍数
             static size_t round_up(size_t bytes) {
                 return ((bytes + ALIGN - 1) & ~(ALIGN - 1));
@@ -54,6 +58,46 @@ namespace hyn {
         };
 
     }
+
+    char *hyn::stl::alloc::start_free = nullptr;
+    char *hyn::stl::alloc::end_free = nullptr;
+    size_t hyn::stl::alloc::heap_size = 0;
+
+    hyn::stl::alloc::obj *hyn::stl::alloc::alloc::free_list[NFREELISTS] = {
+            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr, nullptr, nullptr, nullptr, nullptr
+    };
+
+    void *hyn::stl::alloc::allocate(size_t bytes) {
+        if (bytes > MAXBYTES) {
+            return malloc(bytes);
+        }
+        size_t index = alloc::free_list_index(bytes);
+        obj *list = free_list[index];
+        if (list) {
+            free_list[index] = list->next;
+            return list;
+        } else {
+            return refill(round_up(bytes));
+        }
+    }
+
+    void *stl::alloc::refill(size_t n) {
+        return nullptr;
+    }
+
+    char *stl::alloc::chunk_alloc(size_t size, size_t &nobjs) {
+        return nullptr;
+    }
+
+    void stl::alloc::deallocate(void *ptr, size_t bytes) {
+
+    }
+
+    void *stl::alloc::reallocate(void *ptr, size_t told_size, size_t new_size) {
+        return nullptr;
+    }
+
 }//namespace
 
 
