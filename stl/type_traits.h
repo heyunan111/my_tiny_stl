@@ -229,6 +229,17 @@ namespace hyn {
             typedef _true_type has_trivial_destructor;
             typedef _true_type is_POD_type;
         };
+
+        /***********************************************************************************************************/
+        template<typename T, T v>
+        struct m_integral_constant {
+            static constexpr T value = v;
+        };
+
+        template<bool T>
+        using m_bool_constant = m_integral_constant<bool, T>;
+        typedef m_bool_constant<true> m_true_type;
+        typedef m_bool_constant<false> m_false_type;
     }//name space stl
 }//name space hyn
 
