@@ -31,6 +31,29 @@ namespace hyn {
             return comp(b, a) ? b : a;
         }
 
+        //copy
+        //input_iterator
+        template<class Input, class Output>
+        Output unchecked_copy_category(Input first, Input last, Output res, hyn::stl::input_iterator_tag) {
+            for (; first != last; ++first, ++res) {
+                *res = *first;
+            }
+            return res;
+        }
 
+        //random_access_iterator
+        template<class Input, class Output>
+        Output unchecked_copy_category(Input first, Input last, Output res, hyn::stl::random_access_iterator_tag) {
+            for (auto n = last - first; n > 0; --n, ++first, ++res) {
+                *res = *first;
+            }
+            return res;
+        }
+
+        //unchecked_copy
+        template<class Input, class Output>
+        Output unchecked_copy(Input first, Input last, Output res) {
+            return unchecked_copy_category(first, last, hyn::stl::iterator_category(first));
+        }
     }//namespace
 }//namespace
