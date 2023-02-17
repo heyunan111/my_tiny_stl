@@ -320,5 +320,57 @@ namespace hyn {
 
         /*******************************************************************************************************************************************************/
 
+        // lexicographical_compare
+        template<class Iter1, class Iter2>
+        bool lexicographical_compare(Iter1 first1, Iter1 last1, Iter2 first2, Iter2 last2) {
+            for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
+                if (*first1 < *first2)
+                    return true;
+                if (*first2 < *first1)
+                    return false;
+            }
+            return first1 == last1 && first2 != last2;
+        }
+
+        template<class Iter1, class Iter2, class Comp>
+        bool lexicographical_compare(Iter1 first1, Iter1 last1, Iter2 first2, Iter2 last2, Comp comp) {
+            for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
+                if (comp(*first1 < *first2))
+                    return true;
+                if (comp(*first2 < *first1))
+                    return false;
+            }
+            return first1 == last1 && first2 != last2;
+        }
+
+        //const unsigned char*
+        bool
+        lexicographical_compare(const unsigned char *first1, const unsigned char *last1, const unsigned char *first2,
+                                const unsigned char *last2) {
+            const auto l1 = last1 - first1;
+            const auto l2 = last2 - first2;
+            const auto res = std::memcmp(first1, first2, hyn::stl::min(l1, l2));
+            return res != 0 ? res < 0 : l1 < l2;
+        }
+        /*******************************************************************************************************************************************************/
+
+        //mismatch
+        template<class It1, class It2>
+        hyn::stl::pair<It1, It2> mismatch(It1 first1, It1 last1, It2 first2) {
+            while (first1 != last1 && *first1 == *first2) {
+                ++first1;
+                ++first2;
+            }
+            return hyn::stl::pair<It1, It2>(first1, first2);
+        }
+
+        template<class It1, class It2, class Comp>
+        hyn::stl::pair<It1, It2> mismatch(It1 first1, It1 last1, It2 first2, Comp comp) {
+            while (first1 != last1 && comp(*first1, *first2)) {
+                ++first1;
+                ++first2;
+            }
+            return hyn::stl::pair<It1, It2>(first1, first2);
+        }
     }//namespace
 }//namespace
