@@ -1,9 +1,7 @@
 //
 // Created by hyn on 2023/2/12.
 //
-
-#ifndef MY_TINY_STL_ITERATOR_H
-#define MY_TINY_STL_ITERATOR_H
+#pragma once
 
 #include <cstddef>
 #include "type_traits.h"
@@ -320,5 +318,3 @@ namespace hyn {
 
     }//namespace
 }//namespace
-
-#endif //MY_TINY_STL_ITERATOR_H

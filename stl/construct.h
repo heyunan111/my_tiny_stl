@@ -1,9 +1,8 @@
 //
 // Created by hyn on 2023/2/13.
 //
+#pragma once
 
-#ifndef MY_TINY_STL_CONSTRUCT_H
-#define MY_TINY_STL_CONSTRUCT_H
 
 #include <new>
 #include "utility.h"
@@ -60,6 +59,3 @@ namespace hyn {
     }//namespace
 }//namespace
 
-
-
-#endif //MY_TINY_STL_CONSTRUCT_H
