@@ -1,0 +1,8 @@
+//
+// Created by hyn on 2023/2/17.
+//
+
+#ifndef MY_TINY_STL_UNINITIALIZED_H
+#define MY_TINY_STL_UNINITIALIZED_H
+
+#endif //MY_TINY_STL_UNINITIALIZED_H
