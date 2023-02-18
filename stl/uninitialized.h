@@ -124,6 +124,32 @@ namespace hyn {
         }
 
         /**********************************************************************************************************************************/
+
         //uninitialized_move_n
+        template<class Input, class Forward, class Size>
+        Forward unchecked_uninitialized_move_n(Input first, Size n, Forward res, std::true_type) {
+            return hyn::stl::move(first, first + n, res);
+        }
+
+        template<class Input, class Forward, class Size>
+        Forward unchecked_uninitialized_move_n(Input first, Size n, Forward res, std::false_type) {
+            auto cur = res;
+            try {
+                for (; n > 0; --n, ++first, ++cur) {
+                    hyn::stl::construct(&*cur, hyn::stl::move(*first));
+                }
+            } catch (...) {
+                for (; res != cur; ++res)
+                    hyn::stl::destroy(&*res);
+                throw;
+            }
+            return cur;
+        }
+
+        template<class Input, class Forward, class Size>
+        Forward uninitialized_move_n(Input first, Size n, Forward res) {
+            return unchecked_uninitialized_move_n(first, n, res,
+                                                  std::is_trivially_move_assignable<typename hyn::stl::iterator_traits<Input>::value_type>{});
+        }
     } //namespace
 }//namespace
