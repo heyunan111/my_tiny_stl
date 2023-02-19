@@ -124,5 +124,62 @@ namespace hyn {
                 len = 0;
             }
         }
+
+        /*****************************************************************************************************/
+        //auto ptr
+        template<class T>
+        class auto_ptr {
+        public:
+            typedef T elem_type;
+        private:
+            T *m_ptr;
+        public:
+            T *get() const {
+                return m_ptr;
+            }
+
+            T *release() {
+                T *temp = m_ptr;
+                m_ptr = nullptr;
+                return temp;
+            }
+
+            T *reset(T *p = nullptr) {
+                if (m_ptr != p) {
+                    delete m_ptr;
+                    m_ptr = p;
+                }
+            }
+
+            explicit auto_ptr(T *p = nullptr) : m_ptr(p) {}
+
+            auto_ptr(auto_ptr &p) : m_ptr(p.release()) {}
+
+            template<class U>
+            auto_ptr(auto_ptr<U> &p):m_ptr(p.release()) {}
+
+            ~auto_ptr() { delete m_ptr; }
+
+            auto_ptr &operator=(auto_ptr &p) {
+                if (this != p) {
+                    delete m_ptr;
+                    m_ptr = p.release();
+                }
+                return *this;
+            }
+
+            template<class U>
+            auto_ptr &operator=(auto_ptr<U> &p) {
+                if (this->get() != p.get()) {
+                    delete m_ptr;
+                    m_ptr = p.release();
+                }
+                return *this;
+            }
+
+            T &operator*() const { return *m_ptr; }
+
+            T *operator&() const { return m_ptr; }
+        };
     }//namespace
 }//namespace
