@@ -160,5 +160,84 @@ namespace hyn {
 
         /**************************************************************************************************************************/
 
+        template<class T>
+        struct hash {
+        };
+
+        template<class T>
+        struct hash<T *> {
+            size_t operator()(T *p) const noexcept {
+                return reinterpret_cast<size_t>(p);
+            }
+        };
+
+#define STL_TRIVIAL_HASH_FCN(Type)              \
+    template <> struct hash<Type> {             \
+    size_t operator()(Type p) const noexcept {  \
+        return static_cast<size_t>(p);          \
+    }                                           \
+    };
+
+        STL_TRIVIAL_HASH_FCN(bool)
+
+        STL_TRIVIAL_HASH_FCN(char)
+
+        STL_TRIVIAL_HASH_FCN(signed char)
+
+        STL_TRIVIAL_HASH_FCN(unsigned char)
+
+        STL_TRIVIAL_HASH_FCN(wchar_t)
+
+        STL_TRIVIAL_HASH_FCN(char16_t)
+
+        STL_TRIVIAL_HASH_FCN(char32_t)
+
+        STL_TRIVIAL_HASH_FCN(short)
+
+        STL_TRIVIAL_HASH_FCN(unsigned short)
+
+        STL_TRIVIAL_HASH_FCN(int)
+
+        STL_TRIVIAL_HASH_FCN(unsigned int)
+
+        STL_TRIVIAL_HASH_FCN(long)
+
+        STL_TRIVIAL_HASH_FCN(unsigned long)
+
+        STL_TRIVIAL_HASH_FCN(long long)
+
+        STL_TRIVIAL_HASH_FCN(unsigned long long)
+
+#undef STL_TRIVIAL_HASH_FCN
+
+        inline size_t bitwise_hash(const unsigned char *first, size_t count) {
+#if (_MSC_VER && _WIN64) || ((__GNUC__ || __clang__) && __SIZEOF_POINTER__ == 8)
+            const size_t fnv_offset = 14695981039346656037ull;
+            const size_t fnv_prime = 1099511628211ull;
+#else
+            const size_t fnv_offset = 2166136261u;
+            const size_t fnv_prime = 16777619u;
+#endif
+            size_t result = fnv_offset;
+            for (size_t i = 0; i < count; ++i) {
+                result ^= (size_t) first[i];
+                result *= fnv_prime;
+            }
+            return result;
+        }
+
+        template<>
+        struct hash<float> {
+            size_t operator()(const float &val) {
+                return val == 0.0f ? 0 : bitwise_hash((const unsigned char *) &val, sizeof(float));
+            }
+        };
+
+        template<>
+        struct hash<long double> {
+            size_t operator()(const long double &val) {
+                return val == 0.0f ? 0 : bitwise_hash((const unsigned char *) &val, sizeof(long double));
+            }
+        };
     }//namespace
 }//namespace
