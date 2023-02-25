@@ -55,5 +55,32 @@ namespace hyn {
             T operator()(const T &x) const { return -x; }
         };
 
+        //加法证同元素
+        template<class T>
+        T identity_element(plus<T>) {
+            return T(0);
+        }
+
+        //乘法的证同元素
+        template<class T>
+        T identity_element(multiplies<T>) {
+            return T(1);
+        }
+
+        template<class T>
+        struct equal_to : public binary_function<T, T, bool> {
+            bool operator()(const T &x, const T &y) const {
+                return x == y;
+            }
+        };
+
+        template<class T>
+        struct not_equal_to : public binary_function<T, T, bool> {
+            bool operator()(const T &x, const T &y) {
+                return x != y;
+            }
+        };
+
+
     }//namespace
 }//namespace
