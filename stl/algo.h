@@ -151,6 +151,70 @@ namespace hyn {
 
         /*****************************************************************************************/
         // search_n
+
+        template<class ForwardIter, class size, class T>
+        ForwardIter such_n(ForwardIter first, ForwardIter last, size n, const T &value) {
+            if (n <= 0) {
+                return first;
+            } else {
+                first = hyn::stl::find(first, last, value);
+                while (first != last) {
+                    auto m = n - 1;
+                    auto i = first;
+                    ++i;
+                    while (i != last && m != 0 && *i == value) {
+                        ++i;
+                        --m;
+                    }
+                    if (m == 0) {
+                        return first;
+                    } else {
+                        first = hyn::stl::find(i, last, value);
+                    }
+                }
+                return last;
+            }
+
+        }
+
+        template<class ForwardIter, class Size, class T, class Compared>
+        ForwardIter
+        search_n(ForwardIter first, ForwardIter last,
+                 Size n, const T &value, Compared comp) {
+            if (n <= 0) {
+                return first;
+            } else {
+                while (first != last) {
+                    if (comp(*first, value))
+                        break;
+                    ++first;
+                }
+                while (first != last) {
+                    auto m = n - 1;
+                    auto i = first;
+                    ++i;
+                    while (i != last && m != 0 && comp(*i, value)) {
+                        ++i;
+                        --m;
+                    }
+                    if (m == 0) {
+                        return first;
+                    } else {
+                        while (i != last) {
+                            if (comp(*i, value))
+                                break;
+                            ++i;
+                        }
+                        first = i;
+                    }
+                }
+                return last;
+            }
+        }
+
+        /*****************************************************************************************/
+        // find_end
+
     }//namespace
 }//namespace
 
