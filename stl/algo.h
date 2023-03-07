@@ -476,8 +476,98 @@ namespace hyn {
         template<class ForwardIter, class T>
         ForwardIter
         ubound_dispatch(ForwardIter first, ForwardIter last, const T &value, forward_iterator_tag) {
-
+            auto len = hyn::stl::distance(first, last);
+            auto half = len;
+            ForwardIter middle;
+            while (len > 0) {
+                half = len >> 1;
+                middle = first;
+                hyn::stl::advance(middle, half);
+                if (value < *middle) {
+                    len = half;
+                } else {
+                    first = middle + 1;
+                    len = len - half - 1;
+                }
+            }
+            return first;
         }
+
+        template<class RandomIter, class T>
+        RandomIter
+        ubound_dispatch(RandomIter first, RandomIter last, const T &value, random_access_iterator_tag) {
+            auto len = last - first;
+            auto half = len;
+            RandomIter middle;
+            while (len > 0) {
+                half = len >> 1;
+                middle = first + half;
+                if (value < *middle) {
+                    len = half;
+                } else {
+                    first = middle + 1;
+                    len = len - half - 1;
+                }
+            }
+            return first;
+        }
+
+        template<class ForwardIter, class T>
+        ForwardIter
+        upper_bound(ForwardIter first, ForwardIter last, const T &value) {
+            return hyn::stl::ubound_dispatch(first, last, value, iterator_category(first));
+        }
+
+        template<class ForwardIter, class T, class Compared>
+        ForwardIter
+        ubound_dispatch(ForwardIter first, ForwardIter last,
+                        const T &value, forward_iterator_tag, Compared comp) {
+            auto len = hyn::stl::distance(first, last);
+            auto half = len;
+            ForwardIter middle;
+            while (len > 0) {
+                half = len >> 1;
+                middle = first;
+                hyn::stl::advance(middle, half);
+                if (comp(value, *middle)) {
+                    len = half;
+                } else {
+                    first = middle;
+                    ++first;
+                    len = len - half - 1;
+                }
+            }
+            return first;
+        }
+
+        template<class RandomIter, class T, class Compared>
+        RandomIter
+        ubound_dispatch(RandomIter first, RandomIter last,
+                        const T &value, random_access_iterator_tag, Compared comp) {
+            auto len = last - first;
+            auto half = len;
+            RandomIter middle;
+            while (len > 0) {
+                half = len >> 1;
+                middle = first + half;
+                if (comp(value, *middle)) {
+                    len = half;
+                } else {
+                    first = middle + 1;
+                    len = len - half - 1;
+                }
+            }
+            return first;
+        }
+
+        template<class ForwardIter, class T, class Compared>
+        ForwardIter
+        upper_bound(ForwardIter first, ForwardIter last, const T &value, Compared comp) {
+            return hyn::stl::ubound_dispatch(first, last, value, iterator_category(first), comp);
+        }
+
+        /*****************************************************************************************/
+        // binary_search
     }//namespace
 }//namespace
 
