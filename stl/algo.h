@@ -315,6 +315,69 @@ namespace hyn {
         /*****************************************************************************************/
         // find_first_of
 
+        template<class InputIter, class ForwardIter>
+        InputIter
+        find_first_of(InputIter first1, InputIter last1, ForwardIter first2, ForwardIter last2) {
+            for (; first1 != last1; ++first1) {
+                for (auto it = first2; it != last2; ++it) {
+                    if (*first1 == *it)
+                        return first1;
+                }
+            }
+            return last1;
+        }
+
+        template<class InputIter, class ForwardIter, class Compared>
+        InputIter
+        find_first_of(InputIter first1, InputIter last1,
+                      ForwardIter first2, ForwardIter last2, Compared comp) {
+            for (; first1 != last1; ++first1) {
+                for (auto iter = first2; iter != last2; ++iter) {
+                    if (comp(*first1, *iter))
+                        return first1;
+                }
+            }
+            return last1;
+        }
+
+        /*****************************************************************************************/
+        // for_each
+        template<class InputIter, class Function>
+        Function for_each(InputIter first, InputIter last, Function f) {
+            for (; first != last; ++first) {
+                f(*first);
+            }
+            return f;
+        }
+
+        /*****************************************************************************************/
+        // adjacent_find
+        template<class ForwardIter>
+        ForwardIter adjacent_find(ForwardIter first, ForwardIter last) {
+            if (first == last)
+                return last;
+            auto next = first;
+            while (next != last) {
+                if (*first == *last)
+                    return first;
+                first = next;
+            }
+            return last;
+        }
+
+        template<class ForwardIter, class Compared>
+        ForwardIter adjacent_find(ForwardIter first, ForwardIter last, Compared comp) {
+            if (first == last) return last;
+            auto next = first;
+            while (++next != last) {
+                if (comp(*first, *next)) return first;
+                first = next;
+            }
+            return last;
+        }
+
+        /*****************************************************************************************/
+        // lower_bound
     }//namespace
 }//namespace
 
