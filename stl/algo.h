@@ -585,7 +585,110 @@ namespace hyn {
         template<class ForwardIter, class T>
         hyn::stl::pair<ForwardIter, ForwardIter>
         erange_dispatch(ForwardIter first, ForwardIter last, const T &value, forward_iterator_tag) {
+            auto len = hyn::stl::distance(first, last);
+            auto half = len;
+            ForwardIter middle, left, right;
+            while (len > 0) {
+                if (*middle < len) {
+                    first = middle + 1;
+                    len = len - half - 1;
+                } else if (value < *middle) {
+                    len = half;
+                } else {
+                    left = hyn::stl::lower_bound(first, last, value);
+                    hyn::stl::advance(first, len);
+                    right = hyn::stl::upper_bound(++middle, first, value);
+                    return hyn::stl::pair<ForwardIter, ForwardIter>(left, right);
+                }
+            }
+            return hyn::stl::pair<ForwardIter, ForwardIter>(last, last);
+        }
 
+        template<class RandomIter, class T>
+        hyn::stl::pair<RandomIter, RandomIter>
+        erange_dispatch(RandomIter first, RandomIter last,
+                        const T &value, random_access_iterator_tag) {
+            auto len = last - first;
+            auto half = len;
+            RandomIter middle, left, right;
+            while (len > 0) {
+                half = len >> 1;
+                middle = first + half;
+                if (*middle < value) {
+                    first = middle + 1;
+                    len = len - half - 1;
+                } else if (value < *middle) {
+                    len = half;
+                } else {
+                    left = hyn::stl::lower_bound(first, middle, value);
+                    right = hyn::stl::upper_bound(++middle, first + len, value);
+                    return hyn::stl::pair<RandomIter, RandomIter>(left, right);
+                }
+            }
+            return hyn::stl::pair<RandomIter, RandomIter>(last, last);
+        }
+
+        template<class ForwardIter, class T>
+        hyn::stl::pair<ForwardIter, ForwardIter>
+        equal_range(ForwardIter first, ForwardIter last, const T &value) {
+            return hyn::stl::erange_dispatch(first, last, value, iterator_category(first));
+        }
+
+        template<class ForwardIter, class T, class Compared>
+        hyn::stl::pair<ForwardIter, ForwardIter>
+        erange_dispatch(ForwardIter first, ForwardIter last,
+                        const T &value, forward_iterator_tag, Compared comp) {
+            auto len = hyn::stl::distance(first, last);
+            auto half = len;
+            ForwardIter middle, left, right;
+            while (len > 0) {
+                half = len >> 1;
+                middle = first;
+                hyn::stl::advance(middle, half);
+                if (comp(*middle, value)) {
+                    first = middle;
+                    ++first;
+                    len = len - half - 1;
+                } else if (comp(value, *middle)) {
+                    len = half;
+                } else {
+                    left = hyn::stl::lower_bound(first, last, value, comp);
+                    hyn::stl::advance(first, len);
+                    right = hyn::stl::upper_bound(++middle, first, value, comp);
+                    return hyn::stl::pair<ForwardIter, ForwardIter>(left, right);
+                }
+            }
+            return hyn::stl::pair<ForwardIter, ForwardIter>(last, last);
+        }
+
+        template<class RandomIter, class T, class Compared>
+        hyn::stl::pair<RandomIter, RandomIter>
+        erange_dispatch(RandomIter first, RandomIter last,
+                        const T &value, random_access_iterator_tag, Compared comp) {
+            auto len = last - first;
+            auto half = len;
+            RandomIter middle, left, right;
+            while (len > 0) {
+                half = len >> 1;
+                middle = first + half;
+                if (comp(*middle, value)) {
+                    first = middle + 1;
+                    len = len - half - 1;
+                } else if (comp(value, *middle)) {
+                    len = half;
+                } else {
+                    left = hyn::stl::lower_bound(first, middle, value, comp);
+                    right = hyn::stl::upper_bound(++middle, first + len, value, comp);
+                    return hyn::stl::pair<RandomIter, RandomIter>(left, right);
+                }
+            }
+            return hyn::stl::pair<RandomIter, RandomIter>(last, last);
+        }
+
+        template<class ForwardIter, class T, class Compared>
+        hyn::stl::pair<ForwardIter, ForwardIter>
+        equal_range(ForwardIter first, ForwardIter last, const T &value, Compared comp) {
+            return hyn::stl::erange_dispatch(first, last, value, iterator_category(first), comp);
         }
     }//namespace
 }//namespace
