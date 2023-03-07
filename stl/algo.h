@@ -568,6 +568,21 @@ namespace hyn {
 
         /*****************************************************************************************/
         // binary_search
+        template<class ForwardIter, class T>
+        bool binary_search(ForwardIter first, ForwardIter last, const T &value) {
+            auto i = hyn::stl::lower_bound(first, last, value);
+            return i != last && !(value < *i);
+        }
+
+        template<class ForwardIter, class T, class Comp>
+        bool binary_search(ForwardIter first, ForwardIter last, const T &value, Comp comp) {
+            auto i = hyn::stl::lower_bound(first, last, value);
+            return i != last && !comp(value, *i);
+        }
+
+        /*****************************************************************************************/
+        // equal_range
+
     }//namespace
 }//namespace
 
