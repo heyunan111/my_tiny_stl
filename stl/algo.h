@@ -582,7 +582,11 @@ namespace hyn {
 
         /*****************************************************************************************/
         // equal_range
+        template<class ForwardIter, class T>
+        hyn::stl::pair<ForwardIter, ForwardIter>
+        erange_dispatch(ForwardIter first, ForwardIter last, const T &value, forward_iterator_tag) {
 
+        }
     }//namespace
 }//namespace
 
