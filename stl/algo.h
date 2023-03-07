@@ -215,6 +215,106 @@ namespace hyn {
         /*****************************************************************************************/
         // find_end
 
+        template<class ForwardIter1, class ForwardIter2>
+        ForwardIter1
+        find_end_dispatch(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2,
+                          forward_iterator_tag, forward_iterator_tag) {
+            if (first2 == last2) {
+                return last1;
+            } else {
+                auto result = last1;
+                while (true) {
+                    auto new_result = hyn::stl::search(first1, last1, first2, last2);
+                    if (new_result == last1) {
+                        return last1;
+                    } else {
+                        result = new_result;
+                        first1 = new_result + 1;
+                    }
+                }
+            }
+        }
+
+        template<class BidirectionalIter1, class BidirectionalIter2>
+        BidirectionalIter1
+        find_end_dispatch(BidirectionalIter1 first1, BidirectionalIter1 last1,
+                          BidirectionalIter2 first2, BidirectionalIter2 last2,
+                          bidirectional_iterator_tag, bidirectional_iterator_tag) {
+            typedef reverse_iterator<BidirectionalIter1> reviter1;
+            typedef reverse_iterator<BidirectionalIter2> reviter2;
+            reviter1 rlast1(first1);
+            reviter2 rlast2(first2);
+            reviter1 rresult = hyn::stl::search(reviter1(last1), rlast1, reviter2(last2), rlast2);
+            if (rresult == rlast1) {
+                return last1;
+            } else {
+                auto result = rresult.base();
+                hyn::stl::advance(result, -hyn::stl::distance(first2, last2));
+                return result;
+            }
+        }
+
+        template<class ForwardIter1, class ForwardIter2>
+        ForwardIter1
+        find_end(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2) {
+            typedef typename iterator_traits<ForwardIter1>::iterator_category Category1;
+            typedef typename iterator_traits<ForwardIter2>::iterator_category Category2;
+            return hyn::stl::find_end_dispatch(first1, last1, first2, last2, Category1(), Category2());
+        }
+
+        template<class ForwardIter1, class ForwardIter2, class Compared>
+        ForwardIter1
+        find_end_dispatch(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2,
+                          forward_iterator_tag, forward_iterator_tag, Compared comp) {
+            if (first2 == last2) {
+                return last1;
+            } else {
+                auto result = last1;
+                while (true) {
+                    // 利用 search 查找某个子序列的首次出现点，找不到则返回 last1
+                    auto new_result = hyn::stl::search(first1, last1, first2, last2, comp);
+                    if (new_result == last1) {
+                        return result;
+                    } else {
+                        result = new_result;
+                        first1 = new_result;
+                        ++first1;
+                    }
+                }
+            }
+        }
+
+        template<class BidirectionalIter1, class BidirectionalIter2, class Compared>
+        BidirectionalIter1
+        find_end_dispatch(BidirectionalIter1 first1, BidirectionalIter1 last1, BidirectionalIter2 first2,
+                          BidirectionalIter2 last2, bidirectional_iterator_tag, bidirectional_iterator_tag,
+                          Compared comp) {
+            typedef reverse_iterator<BidirectionalIter1> reviter1;
+            typedef reverse_iterator<BidirectionalIter2> reviter2;
+            reviter1 rlast1(first1);
+            reviter2 rlast2(first2);
+            reviter1 rresult = hyn::stl::search(reviter1(last1), rlast1, reviter2(last2), rlast2, comp);
+            if (rresult == rlast1) {
+                return last1;
+            } else {
+                auto result = rresult.base();
+                hyn::stl::advance(result, -hyn::stl::distance(first2, last2));
+                return result;
+            }
+        }
+
+        template<class ForwardIter1, class ForwardIter2, class Compared>
+        ForwardIter1
+        find_end(ForwardIter1 first1, ForwardIter1 last1,
+                 ForwardIter2 first2, ForwardIter2 last2, Compared comp) {
+            typedef typename iterator_traits<ForwardIter1>::iterator_category Category1;
+            typedef typename iterator_traits<ForwardIter2>::iterator_category Category2;
+            return hyn::stl::find_end_dispatch(first1, last1, first2, last2, Category1(), Category2(), comp);
+        }
+
+        /*****************************************************************************************/
+        // find_first_of
+
     }//namespace
 }//namespace
 
