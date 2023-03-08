@@ -690,6 +690,196 @@ namespace hyn {
         equal_range(ForwardIter first, ForwardIter last, const T &value, Compared comp) {
             return hyn::stl::erange_dispatch(first, last, value, iterator_category(first), comp);
         }
+
+        /*****************************************************************************************/
+        // generate_n
+
+        template<class ForwardIter, class size, class Generator>
+        void generate_n(ForwardIter first, size n, Generator gen) {
+            for (; n > 0; --n, --first) {
+                *first = gen();
+            }
+        }
+
+        /*****************************************************************************************/
+        // includes
+
+        template<class InputIter1, class InputIter2>
+        bool includes(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2) {
+            while (first1 != last1 && first2 != last2) {
+                if (*first2 < *first1) {
+                    return false;
+                } else if (*first1 < *first2) {
+                    ++first1;
+                } else {
+                    ++first1;
+                    ++first2;
+                }
+            }
+            return true;
+        }
+
+        template<class InputIter1, class InputIter2, class Comp>
+        bool includes(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, Comp comp) {
+            while (first1 != last1 && first2 != last2) {
+                if (comp(*first2, *first1)) {
+                    return false;
+                } else if (comp(*first1, *first2)) {
+                    ++first1;
+                } else {
+                    ++first1;
+                    ++first2;
+                }
+            }
+            return true;
+        }
+
+        /*****************************************************************************************/
+        // is_heap
+        template<class RandomIter>
+        bool is_heap(RandomIter first, RandomIter last) {
+            auto n = hyn::stl::distance(first, last);
+            auto parent = 0;
+            for (auto child = 0; child < n; ++child) {
+                if (first[child] > first[parent]) {
+                    return false;
+                }
+                if ((child & 1) == 0) //是偶数
+                    ++parent;
+            }
+            return true;
+        }
+
+        template<class RandomIter, class Comp>
+        bool is_heap(RandomIter first, RandomIter last, Comp comp) {
+            auto n = hyn::stl::distance(first, last);
+            auto parent = 0;
+            for (auto child = 0; child < n; ++child) {
+                if (comp(first[parent], first[child])) {
+                    return false;
+                }
+                if ((child & 1) == 0) //是偶数
+                    ++parent;
+            }
+            return true;
+        }
+
+        /*****************************************************************************************/
+        // is_sorted
+        template<class ForwardIter>
+        bool is_sorted(ForwardIter first, ForwardIter last) {
+            if (first == last)
+                return true;
+            auto next = first + 1;
+            for (; next != last; first = next, ++next) {
+                if (*next < *first)
+                    return false;
+            }
+            return true;
+        }
+
+        template<class ForwardIter, class Compared>
+        bool is_sorted(ForwardIter first, ForwardIter last, Compared comp) {
+            if (first == last)
+                return true;
+            auto next = first;
+            ++next;
+            for (; next != last; first = next, ++next) {
+                if (comp(*next, *first))
+                    return false;
+            }
+            return true;
+        }
+
+        /*****************************************************************************************/
+        // median
+        template<class T>
+        const T &median(const T &left, const T &mid, const T &right) {
+            if (left < mid)
+                if (mid < right)        // left < mid < right
+                    return mid;
+                else if (left < right)  // left < right <= mid
+                    return right;
+                else                    // right <= left < mid
+                    return left;
+            else if (left < right)      // mid <= left < right
+                return left;
+            else if (mid < right)       // mid < right <= left
+                return right;
+            else                        // right <= mid <= left
+                return mid;
+        }
+
+        template<class T, class Compared>
+        const T &median(const T &left, const T &mid, const T &right, Compared comp) {
+            if (comp(left, mid))
+                if (comp(mid, right))
+                    return mid;
+                else if (comp(left, right))
+                    return right;
+                else
+                    return left;
+            else if (comp(left, right))
+                return left;
+            else if (comp(mid, right))
+                return right;
+            else
+                return mid;
+        }
+
+        /*****************************************************************************************/
+        // max_element
+        template<class ForwardIter>
+        ForwardIter max_element(ForwardIter first, ForwardIter last) {
+            if (first == last)
+                return first;
+            auto result = first;
+            while (++first != last) {
+                if (*result < *first)
+                    result = first;
+            }
+            return result;
+        }
+
+        template<class ForwardIter, class Compared>
+        ForwardIter max_element(ForwardIter first, ForwardIter last, Compared comp) {
+            if (first == last)
+                return first;
+            auto result = first;
+            while (++first != last) {
+                if (comp(*result, *first))
+                    result = first;
+            }
+            return result;
+        }
+
+        /*****************************************************************************************/
+        // min_element
+
+        template<class ForwardIter>
+        ForwardIter min_elememt(ForwardIter first, ForwardIter last) {
+            if (first == last)
+                return first;
+            auto result = first;
+            while (++first != last) {
+                if (*first < *result)
+                    result = first;
+            }
+            return result;
+        }
+
+        template<class ForwardIter, class Compared>
+        ForwardIter min_elememt(ForwardIter first, ForwardIter last, Compared comp) {
+            if (first == last)
+                return first;
+            auto result = first;
+            while (++first != last) {
+                if (comp(*first, *result))
+                    result = first;
+            }
+            return result;
+        }
+
     }//namespace
 }//namespace
 
