@@ -921,6 +921,54 @@ namespace hyn {
             }
             return result;
         }
+
+        /*****************************************************************************************/
+        // remove
+
+        template<class ForwardIter, class T>
+        ForwardIter remove(ForwardIter first, ForwardIter last, const T &value) {
+            first = hyn::stl::find(first, last, value);
+            auto next = first;
+            return first == last ? first : hyn::stl::remove_copy(++next, last, first, value);
+        }
+
+        /*****************************************************************************************/
+        // remove_copy_if
+        template<class InputIter, class OutputIter, class UnaryPredicate>
+        OutputIter
+        remove_copy_if(InputIter first, InputIter last,
+                       OutputIter result, UnaryPredicate unary_pred) {
+            for (; first != last; ++first) {
+                if (!unary_pred(*first)) {
+                    *result = *first;
+                    ++result;
+                }
+            }
+            return result;
+        }
+
+        /*****************************************************************************************/
+        // remove_if
+        template<class ForwardIter, class UnaryPredicate>
+        ForwardIter remove_if(ForwardIter first, ForwardIter last, UnaryPredicate unary_op) {
+            first = hyn::stl::find_if(first, last, unary_op);
+            auto next = first;
+            return first == last ? first : hyn::stl::remove_copy_if(++next, last, first, unary_op);
+        }
+
+        /*****************************************************************************************/
+        // replace
+        template<class ForwardIter, class T>
+        void replace(ForwardIter first, ForwardIter last, const T &old_value, const T &new_value) {
+            for (; first != last; ++first) {
+                if (*first == old_value) {
+                    *first = new_value;
+                }
+            }
+        }
+
+        /*****************************************************************************************/
+        // replace_copy
     }//namespace
 }//namespace
 
