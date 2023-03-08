@@ -1011,6 +1011,30 @@ namespace hyn {
                 hyn::stl::iter_swap(first++, last);
             }
         }
+
+        template<class RandomIter>
+        void reverse_dispatch(RandomIter first, RandomIter last, random_access_iterator_tag) {
+            while (first < last) {
+                hyn::stl::iter_swap(first++, --last);
+            }
+        }
+
+        template<class RandomIter>
+        void reverse(RandomIter first, RandomIter last) {
+            hyn::stl::reverse_dispatch(first, last, iterator_category(first));
+        }
+
+        /*****************************************************************************************/
+        // reverse_copy
+        template<class BidirectionalIter, class OutputIter>
+        OutputIter reverse_copy(BidirectionalIter first, BidirectionalIter last, OutputIter result) {
+            while (first != last) {
+                --last;
+                *result = *last;
+                ++result;
+            }
+            return result;
+        }
     }//namespace
 }//namespace
 
