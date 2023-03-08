@@ -969,6 +969,48 @@ namespace hyn {
 
         /*****************************************************************************************/
         // replace_copy
+        template<class InputIter, class OutputIter, class T>
+        OutputIter
+        replace_copy(InputIter first, InputIter last, OutputIter result, const T &old_value, const T &new_value) {
+            for (; first != last; ++first, ++result) {
+                *result = *first == old_value ? new_value : *first;
+            }
+            return result;
+        }
+
+        /*****************************************************************************************/
+        // replace_copy_if
+        template<class InputIter, class OutputIter, class UnaryPredicate, class T>
+        OutputIter
+        replace_copy_if(InputIter first, InputIter last,
+                        OutputIter result, UnaryPredicate unary_pred, const T &new_value) {
+            for (; first != last; ++first, ++result) {
+                *result = unary_pred(*first) ? new_value : *first;
+            }
+            return result;
+        }
+
+        /*****************************************************************************************/
+        // replace_if
+        template<class ForwardIter, class UnaryPredicate, class T>
+        void replace_if(ForwardIter first, ForwardIter last, const T &value, UnaryPredicate unary_op) {
+            for (; first != last; ++first) {
+                if (unary_op(*first))
+                    *first = value;
+            }
+        }
+
+        /*****************************************************************************************/
+        // reverse
+        template<class BidirectionalIter>
+        void reverse_dispatch(BidirectionalIter first, BidirectionalIter last, bidirectional_iterator_tag) {
+            while (true) {
+                if (first == last || first == --last) {
+                    return;
+                }
+                hyn::stl::iter_swap(first++, last);
+            }
+        }
     }//namespace
 }//namespace
 
