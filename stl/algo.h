@@ -883,7 +883,7 @@ namespace hyn {
         /*****************************************************************************************/
         // swap_ranges
         template<class ForwardIter1, class ForwardIter2>
-        ForwardIter2 swap_ranges(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2) {
+        ForwardIter2 swap_ranges(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2) {
             for (; first1 != last1; ++first1, ++first2) {
                 hyn::stl::iter_swap(first1, first2);
             }
@@ -1062,7 +1062,7 @@ namespace hyn {
         /*****************************************************************************************/
         // rotate
         template<class ForwardIter>
-        ForwardIter rotate_dispatch(ForwardIter first, ForwardIter last, ForwardIter middle, forward_iterator_tag) {
+        ForwardIter rotate_dispatch(ForwardIter first, ForwardIter middle, ForwardIter last, forward_iterator_tag) {
             auto first2 = middle;
             do {
                 hyn::stl::swap(*first++, *first2++);
@@ -1110,6 +1110,188 @@ namespace hyn {
             }
             return m;
         }
+
+        template<class RandomIter>
+        RandomIter rotate_dispatch(RandomIter first, RandomIter middle, RandomIter last, random_access_iterator_tag) {
+            auto n = last - first;
+            auto l = middle - first;
+            auto r = n - 1;
+            auto result = first + (last - middle);
+            if (l == r) {
+                hyn::stl::swap_ranges(first, last, middle);
+                return result;
+            }
+            auto cycle_times = rgcd(n, l);
+            for (auto i = 0; i < cycle_times; ++i) {
+                auto tmp = *first;
+                auto p = first;
+                if (l < r) {
+                    for (auto j = 0; j < r / cycle_times; ++j) {
+                        if (p > first + r) {
+                            *p = *(p - r);
+                            p -= r;
+                        }
+                        *p = *(p + l);
+                        p += l;
+                    }
+                } else {
+                    for (auto j = 0; j < l / cycle_times - 1; ++j) {
+                        if (p < last - l) {
+                            *p = *(p + l);
+                            p += l;
+                        }
+                        *p = *(p - r);
+                        p -= r;
+                    }
+                }
+                *p = tmp;
+                ++first;
+            }
+            return result;
+        }
+
+        template<class ForwardIter>
+        ForwardIter rotate(ForwardIter first, ForwardIter middle, ForwardIter last) {
+            if (first == last)
+                return last;
+            if (middle == last)
+                return first;
+            return hyn::stl::rotate_dispatch(first, middle, last, hyn::stl::iterator_category(first));
+        }
+
+        /*****************************************************************************************/
+        // rotate_copy
+        template<class ForwardIter, class OutputIter>
+        OutputIter rotate_copy(ForwardIter first, ForwardIter middle, ForwardIter last, OutputIter result) {
+            return hyn::stl::copy(first, middle, hyn::stl::copy(middle, last, result));
+        }
+
+        /*****************************************************************************************/
+        // is_permutation
+        template<class ForwardIter1, class ForwardIter2, class BinaryPred>
+        bool is_permutation_aux(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2, ForwardIter2 last2,
+                                BinaryPred pre) {
+            constexpr bool is_ra_it = hyn::stl::is_random_access_iterator<ForwardIter1>::value &&
+                                      hyn::stl::is_random_access_iterator<ForwardIter2>::value;
+            if (is_ra_it) {
+                auto len1 = last1 - first1;
+                auto len2 = last2 - first2;
+                if (len1 != len2)
+                    return false;
+            }
+
+            for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
+                if (!pre(*first1, *first2))
+                    break;
+            }
+
+            if (is_ra_it) {
+                if (first1 == last1)
+                    return true;
+            } else {
+                auto len1 = hyn::stl::distance(first1, last1);
+                auto len2 = hyn::stl::distance(first2, last2);
+                if (len1 == 0 && len2 == 0) {
+                    return true;
+                }
+                if (len1 != len2)
+                    return false;
+            }
+
+            for (auto i = first1; i != last1; ++i) {
+                bool is_repeated = false;
+                for (auto j = first1; j != i; ++j) {
+                    if (pre(*j, *i)) {
+                        is_repeated = true;
+                        break;
+                    }
+                }
+
+                if (!is_repeated) {
+                    auto c2 = 0;
+                    for (auto j = first2; j != last2; ++j) {
+                        if (pre(*i, *j))
+                            ++c2;
+                    }
+
+                    if (c2 == 0)
+                        return false;
+
+                    auto c1 = 0;
+                    auto j = i + 1;
+                    for (; j != last1; ++j) {
+                        if (pre(*i, *j)) {
+                            ++c1;
+                        }
+                    }
+
+                    if (c1 != c2)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        template<class ForwardIter1, class ForwardIter2, class BinaryPred>
+        bool is_permutation(ForwardIter1 f1, ForwardIter1 l1, ForwardIter2 f2, ForwardIter2 l2, BinaryPred pred) {
+            return is_permutation_aux(f1, l1, f2, l2, pred);
+        }
+
+        template<class ForwardIter1, class ForwardIter2>
+        bool is_permutation(ForwardIter1 f1, ForwardIter1 l1, ForwardIter2 f2, ForwardIter1 l2) {
+            typedef typename iterator_traits<ForwardIter1>::value_type v1;
+            typedef typename iterator_traits<ForwardIter2>::value_type v2;
+            static_assert(std::is_same<v1, v2>::value, "the type should be same in is_permutation");
+            return is_permutation_aux(f1, l1, f2, l2, hyn::stl::equal_to<v1>());
+        }
+
+        /*****************************************************************************************/
+        // next_permutation
+
+        template<class BidirectionalIter>
+        bool next_permutation(BidirectionalIter first, BidirectionalIter last) {
+            auto i = last;
+            if (first == last || first == --i)
+                return false;
+            for (;;) {
+                auto ii = i;
+                if (*--i < *ii) {
+                    auto j = last;
+                    while (!(*i < *--j)) {}
+                    hyn::stl::iter_swap(i, j);
+                    hyn::stl::reverse(ii, last);
+                    return true;
+                }
+                if (i == first) {
+                    hyn::stl::reverse(first, last);
+                    return false;
+                }
+            }
+        }
+
+        template<class BidirectionalIter, class Compared>
+        bool next_permutation(BidirectionalIter first, BidirectionalIter last, Compared comp) {
+            auto i = last;
+            if (first == last || first == --i)
+                return false;
+            for (;;) {
+                auto ii = i;
+                if (comp(*--i, *ii)) {
+                    auto j = last;
+                    while (!comp(*i, *--j)) {}
+                    hyn::stl::iter_swap(i, j);
+                    hyn::stl::reverse(ii, last);
+                    return true;
+                }
+                if (i == first) {
+                    hyn::stl::reverse(first, last);
+                    return false;
+                }
+            }
+        }
+
+
     }//namespace
 }//namespace
 
