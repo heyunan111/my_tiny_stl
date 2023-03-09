@@ -1035,6 +1035,81 @@ namespace hyn {
             }
             return result;
         }
+
+        /*****************************************************************************************/
+        // random_shuffle
+
+        template<class RandomIter>
+        void random_shuffle(RandomIter first, RandomIter last) {
+            if (first == last)
+                return;
+            srand((unsigned) time(0));
+            for (auto i = first + 1; i != last; ++i) {
+                hyn::stl::iter_swap(i, first + (rand() % (i - first + 1)));
+            }
+        }
+
+        template<class RandomIter, class RandomNumberGenerator>
+        void random_shuffle(RandomIter first, RandomIter last, RandomNumberGenerator &rand) {
+            if (first == last)
+                return;
+            auto len = hyn::stl::distance(first, last);
+            for (auto it = first + 1; it != last; ++it) {
+                hyn::stl::iter_swap(it, first + rand(it - first + 1) % len);
+            }
+        }
+
+        /*****************************************************************************************/
+        // rotate
+        template<class ForwardIter>
+        ForwardIter rotate_dispatch(ForwardIter first, ForwardIter last, ForwardIter middle, forward_iterator_tag) {
+            auto first2 = middle;
+            do {
+                hyn::stl::swap(*first++, *first2++);
+                if (middle == first)
+                    middle = first2;
+            } while (first2 != last);
+
+            auto new_middle = first;
+            first2 = middle;
+            while (first2 != last) {
+                hyn::stl::swap(*first++, *first2++);
+                if (first == middle) {
+                    middle = first2;
+                } else if (first2 == last) {
+                    first2 = middle;
+                }
+            }
+            return new_middle;
+        }
+
+        template<class BidirectionalIter>
+        BidirectionalIter rotate_dispatch(BidirectionalIter first, BidirectionalIter middle, BidirectionalIter last,
+                                          bidirectional_iterator_tag) {
+            hyn::stl::reverse_dispatch(first, middle, bidirectional_iterator_tag());
+            hyn::stl::reverse_dispatch(middle, last, bidirectional_iterator_tag());
+            while (first != middle && last != middle) {
+                hyn::stl::swap(*first++, --*last);
+                if (first == middle) {
+                    hyn::stl::reverse_dispatch(middle, last, bidirectional_iterator_tag());
+                    return last;
+                } else {
+                    hyn::stl::reverse_dispatch(first, middle, bidirectional_iterator_tag());
+                    return first;
+                }
+            }
+        }
+
+        // 求最大公因子
+        template<class EuclideanRingElement>
+        EuclideanRingElement rgcd(EuclideanRingElement m, EuclideanRingElement n) {
+            while (n != 0) {
+                auto t = m % n;
+                m = n;
+                n = t;
+            }
+            return m;
+        }
     }//namespace
 }//namespace
 
