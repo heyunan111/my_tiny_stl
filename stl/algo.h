@@ -1291,6 +1291,123 @@ namespace hyn {
             }
         }
 
+        /*****************************************************************************************/
+        // merge
+        template<class InputIter1, class InputIter2, class OutputITer>
+        OutputITer merge(InputIter1 first1, InputIter1 last1, InputIter2 first2, InputIter2 last2, OutputITer result) {
+            while (first1 != last1 && first2 != last2) {
+                if (*first2 < *first1) {
+                    *result = *first2;
+                    ++first2;
+                } else {
+                    *result = *first1;
+                    ++first1;
+                }
+                ++result;
+            }
+            return hyn::stl::copy(first2, last2, hyn::stl::copy(first1, last1, result));
+        }
+
+        template<class InputIter1, class InputIter2, class OutputIter, class Compared>
+        OutputIter
+        merge(InputIter1 first1, InputIter1 last1,
+              InputIter2 first2, InputIter2 last2,
+              OutputIter result, Compared comp) {
+            while (first1 != last1 && first2 != last2) {
+                if (comp(*first2, *first1)) {
+                    *result = *first2;
+                    ++first2;
+                } else {
+                    *result = *first1;
+                    ++first1;
+                }
+                ++result;
+            }
+            return hyn::stl::copy(first2, last2, hyn::stl::copy(first1, last1, result));
+        }
+
+        /*****************************************************************************************/
+        // inplace_merge
+        template<class BidirectionalIter, class Distance>
+        void
+        merge_without_buffer(BidirectionalIter first, BidirectionalIter middle, BidirectionalIter last, Distance len1,
+                             Distance len2) {
+            if (len1 == 0 || len2 == 0)
+                return;
+
+            if (len1 + len2 == 2) {
+                if (*middle < *first)
+                    hyn::stl::iter_swap(first, middle);
+                return;
+            }
+
+            auto first_cut = first;
+            auto second_cut = middle;
+            Distance len11 = 0;
+            Distance len22 = 0;
+
+            if (len1 > len2) {
+                len11 = len1 >> 1;
+                hyn::stl::advance(first_cut, len11);
+                second_cut = hyn::stl::lower_bound(middle, last, *first);
+                len22 = hyn::stl::distance(middle, second_cut);
+            } else {
+                len22 = len2 >> 1;
+                hyn::stl::advance(second_cut, len22);
+                first_cut = hyn::stl::lower_bound(first, middle, *second_cut);
+                len22 = hyn::stl::advance(first, first_cut);
+            }
+
+            auto new_middle = hyn::stl::rotate(first_cut, middle, second_cut);
+            hyn::stl::merge_without_buffer(first, first_cut, new_middle, len11, len22);
+            hyn::stl::merge_without_buffer(new_middle, second_cut, last, len1 - len11, len2 - len22);
+        }
+
+        template<class BidirectionalIter1, class BidirectionalIter2>
+        BidirectionalIter1
+        merge_backward(BidirectionalIter1 first1, BidirectionalIter1 last1, BidirectionalIter2 first2,
+                       BidirectionalIter2 last2, BidirectionalIter1 result) {
+            if (first1 == last1)
+                return hyn::stl::copy_backward(first2, last2, result);
+            if (first2 == last2)
+                return hyn::stl::copy_backward(first1, last1, result);
+
+            --last1;
+            --last2;
+
+            while (true) {
+                if (*last1 < *last2) {
+                    *--result = *last1;
+                    if (first1 == last1)
+                        return hyn::stl::copy_backward(first2, ++last2, result);
+                    --last1;
+                } else {
+                    *--result = *last2;
+                    if (first2 == last2)
+                        return hyn::stl::copy_backward(first1, ++last1, result);
+                    --last2;
+                }
+            }
+
+        }
+
+        template<class BidirectionalIter1, class BidirectionalIter2, class Distance>
+        BidirectionalIter1
+        rotate_adaptive(BidirectionalIter1 first, BidirectionalIter1 middle, BidirectionalIter2 last,
+                        Distance len1, Distance len2, BidirectionalIter2 buffer, Distance buffer_size) {
+            BidirectionalIter2 buffer_end;
+            if (len1 > len2 && len2 <= buffer_size) {
+                buffer_end = hyn::stl::copy(middle, last, buffer);
+                hyn::stl::copy_backward(first, middle, last);
+                return hyn::stl::copy(buffer, buffer_end, first);
+            } else if (len1 <= buffer_size) {
+                buffer_end = hyn::stl::copy(first, middle, buffer);
+                hyn::stl::copy_backward(middle, last, first);
+                return hyn::stl::copy(buffer, buffer_end, last);
+            } else {
+                return hyn::stl::rotate(first, middle, last);
+            }
+        }
 
     }//namespace
 }//namespace
