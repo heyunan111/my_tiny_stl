@@ -1409,6 +1409,178 @@ namespace hyn {
             }
         }
 
+        template<class BidirectionalIter, class Distance, class Pointer>
+        void merge_adaptive(BidirectionalIter first, BidirectionalIter middle, BidirectionalIter last, Distance len1,
+                            Distance len2, Pointer buffer, Distance buffer_size) {
+            if (len1 <= len2 && len1 <= buffer_size) {
+                Pointer buffer_end = hyn::stl::copy(first, middle, buffer);
+                hyn::stl::merge(buffer, buffer_end, middle, last, first);
+            } else if (len2 <= buffer_size) {
+                Pointer buffer_end = hyn::stl::copy(middle, last, buffer);
+                hyn::stl::merge_backward(first, middle, buffer, buffer_end, last);
+            } else {
+                auto first_cut = first;
+                auto second_cut = middle;
+                Distance len11 = 0;
+                Distance len22 = 0;
+
+                if (len1 > len2) {
+                    len11 = len1 >> 1;
+                    hyn::stl::advance(first_cut, len11);
+                    second_cut = hyn::stl::lower_bound(middle, last, *first_cut);
+                    len22 = hyn::stl::distance(middle, second_cut);
+                } else {
+                    len22 = len2 >> 1;
+                    hyn::stl::advance(second_cut, len22);
+                    first_cut = hyn::stl::upper_bound(first, middle, *second_cut);
+                    len11 = hyn::stl::distance(first, first_cut);
+                }
+                auto new_middle = hyn::stl::rotate_adaptive(first_cut, middle, second_cut, len1 - len11, len22, buffer,
+                                                            buffer_size);
+
+                hyn::stl::merge_adaptive(first, first_cut, new_middle, len11, len22, buffer, buffer_size);
+
+                hyn::stl::merge_adaptive(new_middle, second_cut, last, len1 - len11, len2 - len22, buffer, buffer_size);
+            }
+        }
+
+        template<class BidirectionalIter, class T>
+        void
+        inplace_merge_aux(BidirectionalIter first, BidirectionalIter middle,
+                          BidirectionalIter last, T *) {
+            auto len1 = hyn::stl::distance(first, middle);
+            auto len2 = hyn::stl::distance(middle, last);
+            temporary_buffer<BidirectionalIter, T> buf(first, last);
+            if (!buf.begin()) {
+                hyn::stl::merge_without_buffer(first, middle, last, len1, len2);
+            } else {
+                hyn::stl::merge_adaptive(first, middle, last, len1, len2, buf.begin(), buf.size());
+            }
+        }
+
+        template<class BidirectionalIter>
+        void
+        inplace_merge(BidirectionalIter first, BidirectionalIter middle,
+                      BidirectionalIter last) {
+            if (first == middle || middle == last)
+                return;
+            hyn::stl::inplace_merge_aux(first, middle, last, value_type(first));
+        }
+
+        template<class BidirectionalIter, class Distance, class Compared>
+        void merge_without_buffer(BidirectionalIter first, BidirectionalIter middle,
+                                  BidirectionalIter last, Distance len1, Distance len2,
+                                  Compared comp) {
+            if (len1 == 0 || len2 == 0)
+                return;
+            if (len1 + len2 == 2) {
+                if (comp(*middle, *first))
+                    hyn::stl::iter_swap(first, middle);
+                return;
+            }
+            auto first_cut = first;
+            auto second_cut = middle;
+            Distance len11 = 0;
+            Distance len22 = 0;
+            if (len1 > len2) {
+                len11 = len1 >> 1;
+                hyn::stl::advance(first_cut, len11);
+                second_cut = hyn::stl::lower_bound(middle, last, *first_cut, comp);
+                len22 = hyn::stl::distance(middle, second_cut);
+            } else {
+                len22 = len2 >> 1;
+                hyn::stl::advance(second_cut, len22);
+                first_cut = hyn::stl::upper_bound(first, middle, *second_cut, comp);
+                len11 = hyn::stl::distance(first, first_cut);
+            }
+            auto new_middle = hyn::stl::rotate(first_cut, middle, second_cut);
+            hyn::stl::merge_without_buffer(first, first_cut, new_middle, len11, len22, comp);
+            hyn::stl::merge_without_buffer(new_middle, second_cut, last, len1 - len11, len2 - len22, comp);
+        }
+
+        template<class BidirectionalIter1, class BidirectionalIter2, class Compared>
+        BidirectionalIter1
+        merge_backward(BidirectionalIter1 first1, BidirectionalIter1 last1,
+                       BidirectionalIter2 first2, BidirectionalIter2 last2,
+                       BidirectionalIter1 result, Compared comp) {
+            if (first1 == last1)
+                return hyn::stl::copy_backward(first2, last2, result);
+            if (first2 == last2)
+                return hyn::stl::copy_backward(first1, last1, result);
+            --last1;
+            --last2;
+            while (true) {
+                if (comp(*last2, *last1)) {
+                    *--result = *last1;
+                    if (first1 == last1)
+                        return hyn::stl::copy_backward(first2, ++last2, result);
+                    --last1;
+                } else {
+                    *--result = *last2;
+                    if (first2 == last2)
+                        return hyn::stl::copy_backward(first1, ++last1, result);
+                    --last2;
+                }
+            }
+        }
+
+        template<class BidirectionalIter, class Distance, class Pointer, class Compared>
+        void merge_adaptive(BidirectionalIter first, BidirectionalIter middle,
+                            BidirectionalIter last, Distance len1, Distance len2,
+                            Pointer buffer, Distance buffer_size, Compared comp) {
+            if (len1 <= len2 && len1 <= buffer_size) {
+                Pointer buffer_end = hyn::stl::copy(first, middle, buffer);
+                hyn::stl::merge(buffer, buffer_end, middle, last, first, comp);
+            } else if (len2 <= buffer_size) {
+                Pointer buffer_end = hyn::stl::copy(middle, last, buffer);
+                hyn::stl::merge_backward(first, middle, buffer, buffer_end, last, comp);
+            } else {
+                auto first_cut = first;
+                auto second_cut = middle;
+                Distance len11 = 0;
+                Distance len22 = 0;
+                if (len1 > len2) {
+                    len11 = len1 >> 1;
+                    hyn::stl::advance(first_cut, len11);
+                    second_cut = hyn::stl::lower_bound(middle, last, *first_cut, comp);
+                    len22 = hyn::stl::distance(middle, second_cut);
+                } else {
+                    len22 = len2 >> 1;
+                    hyn::stl::advance(second_cut, len22);
+                    first_cut = hyn::stl::upper_bound(first, middle, *second_cut, comp);
+                    len11 = hyn::stl::distance(first, first_cut);
+                }
+                auto new_middle = hyn::stl::rotate_adaptive(first_cut, middle, second_cut, len1 - len11,
+                                                            len22, buffer, buffer_size);
+                hyn::stl::merge_adaptive(first, first_cut, new_middle, len11,
+                                         len22, buffer, buffer_size, comp);
+                hyn::stl::merge_adaptive(new_middle, second_cut, last, len1 - len11,
+                                         len2 - len22, buffer, buffer_size, comp);
+            }
+        }
+
+        template<class BidirectionalIter, class T, class Compared>
+        void
+        inplace_merge_aux(BidirectionalIter first, BidirectionalIter middle,
+                          BidirectionalIter last, T *, Compared comp) {
+            auto len1 = hyn::stl::distance(first, middle);
+            auto len2 = hyn::stl::distance(middle, last);
+            temporary_buffer<BidirectionalIter, T> buf(first, last);
+            if (!buf.begin()) {
+                hyn::stl::merge_without_buffer(first, middle, last, len1, len2, comp);
+            } else {
+                hyn::stl::merge_adaptive(first, middle, last, len1, len2, buf.begin(), buf.size(), comp);
+            }
+        }
+
+        template<class BidirectionalIter, class Compared>
+        void
+        inplace_merge(BidirectionalIter first, BidirectionalIter middle,
+                      BidirectionalIter last, Compared comp) {
+            if (first == middle || middle == last)
+                return;
+            hyn::stl::inplace_merge_aux(first, middle, last, value_type(first), comp);
+        }
     }//namespace
 }//namespace
 
