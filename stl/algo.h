@@ -1500,9 +1500,8 @@ namespace hyn {
 
         template<class BidirectionalIter1, class BidirectionalIter2, class Compared>
         BidirectionalIter1
-        merge_backward(BidirectionalIter1 first1, BidirectionalIter1 last1,
-                       BidirectionalIter2 first2, BidirectionalIter2 last2,
-                       BidirectionalIter1 result, Compared comp) {
+        merge_backward(BidirectionalIter1 first1, BidirectionalIter1 last1, BidirectionalIter2 first2,
+                       BidirectionalIter2 last2, BidirectionalIter1 result, Compared comp) {
             if (first1 == last1)
                 return hyn::stl::copy_backward(first2, last2, result);
             if (first2 == last2)
@@ -1581,6 +1580,35 @@ namespace hyn {
                 return;
             hyn::stl::inplace_merge_aux(first, middle, last, value_type(first), comp);
         }
+
+        /*****************************************************************************************/
+        // partial_sort
+
+        template<class RandomIter>
+        void partial_sort(RandomIter first, RandomIter middle, RandomIter last) {
+            hyn::stl::make_heap(first, middle);
+            for (auto i = middle; i < last; ++i) {
+                if (*i < *first) {
+                    hyn::stl::pop_heap_aux(first, middle, i, *i, distance_type(first));
+                }
+            }
+            hyn::stl::sort_heap(first, middle);
+        }
+
+        template<class RandomIter, class Compared>
+        void partial_sort(RandomIter first, RandomIter middle, RandomIter last, Compared comp) {
+            hyn::stl::make_heap(first, middle, comp);
+            for (auto i = middle; i < last; ++i) {
+                if (comp(*i, *first)) {
+                    hyn::stl::pop_heap_aux(first, middle, i, *i, distance_type(first), comp);
+                }
+            }
+            hyn::stl::sort_heap(first, middle, comp);
+        }
+
+        /*****************************************************************************************/
+        // partial_sort_copy
+
     }//namespace
 }//namespace
 
