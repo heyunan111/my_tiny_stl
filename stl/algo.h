@@ -1711,6 +1711,177 @@ namespace hyn {
             }
             return k;
         }
+
+        template<class RandomIter, class T>
+        RandomIter unchecked_partition(RandomIter first, RandomIter last, const T &pivot) {
+            while (true) {
+                while (*first < pivot)
+                    ++first;
+                --last;
+                while (*last > pivot)
+                    --last;
+                if (!(first < last))
+                    return first;
+                hyn::stl::iter_swap(first, last);
+                ++first;
+            }
+        }
+
+
+        template<class RandomIter, class Size>
+        void intro_sort(RandomIter first, RandomIter last, Size depth_limit) {
+            while (static_cast<size_t>(last - first) > kSmallSectionSize) {
+                if (depth_limit == 0) {
+                    hyn::stl::partial_sort(first, last, last);
+                    return;
+                }
+                --depth_limit;
+                auto mid = hyn::stl::median(*first, *(first + (last - first) / 2), *(last - 1));
+                auto cut = hyn::stl::unchecked_partition(first, last, mid);
+                hyn::stl::intro_sort(cut, last, depth_limit);
+                last = cut;
+            }
+        }
+
+        template<class RandomIter, class T>
+        void unchecked_linear_insert(RandomIter last, const T &value) {
+            auto next = last - 1;
+            while (value < *next) {
+                *last = *next;
+                last = next;
+                --next;
+            }
+            *last = *value;
+        }
+
+        template<class RandomIter>
+        void unchecked_insertion_sort(RandomIter first, RandomIter last) {
+            for (auto i = first; i != last; ++i) {
+                hyn::stl::unchecked_linear_insert(i, *i);
+            }
+        }
+
+        template<class RandomIter>
+        void insertion_sort(RandomIter first, RandomIter last) {
+            if (first == last)
+                return;
+            for (auto i = first + 1; i != last; ++i) {
+                auto value = *i;
+                if (value < *first) {
+                    hyn::stl::copy_backward(first, i, i + 1);
+                    *first = value;
+                } else {
+                    hyn::stl::unchecked_linear_insert(i, value);
+                }
+            }
+        }
+
+        template<class RandomIter>
+        void final_insertion_sort(RandomIter first, RandomIter last) {
+            if (static_cast<size_t>(last - first) > kSmallSectionSize) {
+                hyn::stl::insertion_sort(first, first + kSmallSectionSize);
+                hyn::stl::unchecked_insertion_sort(first + kSmallSectionSize, last);
+            } else {
+                hyn::stl::insertion_sort(first, last);
+            }
+        }
+
+        template<class RandomIter>
+        void sort(RandomIter first, RandomIter last) {
+            if (first != last) {
+                hyn::stl::intro_sort(first, last, slg2(last - first) * 2);
+                hyn::stl::final_insertion_sort(first, last);
+            }
+        }
+
+        template<class RandomIter, class T, class Compared>
+        RandomIter
+        unchecked_partition(RandomIter first, RandomIter last,
+                            const T &pivot, Compared comp) {
+            while (true) {
+                while (comp(*first, pivot))
+                    ++first;
+                --last;
+                while (comp(pivot, *last))
+                    --last;
+                if (!(first < last))
+                    return first;
+                hyn::stl::iter_swap(first, last);
+                ++first;
+            }
+        }
+
+        template<class RandomIter, class Size, class Compared>
+        void intro_sort(RandomIter first, RandomIter last,
+                        Size depth_limit, Compared comp) {
+            while (static_cast<size_t>(last - first) > kSmallSectionSize) {
+                if (depth_limit == 0) {
+                    hyn::stl::partial_sort(first, last, last, comp);  // 改用 heap_sort
+                    return;
+                }
+                --depth_limit;
+                auto mid = hyn::stl::median(*(first), *(first + (last - first) / 2), *(last - 1));
+                auto cut = hyn::stl::unchecked_partition(first, last, mid, comp);
+                hyn::stl::intro_sort(cut, last, depth_limit, comp);
+                last = cut;
+            }
+        }
+
+        template<class RandomIter, class T, class Compared>
+        void unchecked_linear_insert(RandomIter last, const T &value, Compared comp) {
+            auto next = last;
+            --next;
+            while (comp(value, *next)) {
+                *last = *next;
+                last = next;
+                --next;
+            }
+            *last = value;
+        }
+
+
+        template<class RandomIter, class Compared>
+        void unchecked_insertion_sort(RandomIter first, RandomIter last,
+                                      Compared comp) {
+            for (auto i = first; i != last; ++i) {
+                hyn::stl::unchecked_linear_insert(i, *i, comp);
+            }
+        }
+
+
+        template<class RandomIter, class Compared>
+        void insertion_sort(RandomIter first, RandomIter last, Compared comp) {
+            if (first == last)
+                return;
+            for (auto i = first + 1; i != last; ++i) {
+                auto value = *i;
+                if (comp(value, *first)) {
+                    hyn::stl::copy_backward(first, i, i + 1);
+                    *first = value;
+                } else {
+                    hyn::stl::unchecked_linear_insert(i, value, comp);
+                }
+            }
+        }
+
+        template<class RandomIter, class Compared>
+        void final_insertion_sort(RandomIter first, RandomIter last, Compared comp) {
+            if (static_cast<size_t>(last - first) > kSmallSectionSize) {
+                hyn::stl::insertion_sort(first, first + kSmallSectionSize, comp);
+                hyn::stl::unchecked_insertion_sort(first + kSmallSectionSize, last, comp);
+            } else {
+                hyn::stl::insertion_sort(first, last, comp);
+            }
+        }
+
+        template<class RandomIter, class Compared>
+        void sort(RandomIter first, RandomIter last, Compared comp) {
+            if (first != last) {
+
+                hyn::stl::intro_sort(first, last, slg2(last - first) * 2, comp);
+                hyn::stl::final_insertion_sort(first, last, comp);
+            }
+        }
     }//namespace
 }//namespace
 
