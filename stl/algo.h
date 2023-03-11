@@ -1608,7 +1608,109 @@ namespace hyn {
 
         /*****************************************************************************************/
         // partial_sort_copy
+        template<class InputIter, class RandomIter, class Distance>
+        RandomIter
+        psort_copy_aux(InputIter first, InputIter last, RandomIter result_first, RandomIter result_last, Distance *) {
+            if (result_first == result_last)
+                return result_last;
+            auto result_iter = result_first;
+            while (first != last && result_iter != result_last) {
+                *result_iter = *first;
+                ++result_iter;
+                ++first;
+            }
+            hyn::stl::make_heap(result_first, result_iter);
+            while (first != last) {
+                if (*first < *result_iter) {
+                    hyn::stl::adjust_heap(result_first, static_cast<Distance>(0), result_iter - result_first, *first);
+                }
+                ++first;
+            }
+            hyn::stl::sort_heap(result_first, result_iter);
+            return result_iter;
+        }
 
+        template<class InputIter, class RandomIter>
+        RandomIter partial_sort_copy(InputIter first, InputIter last, RandomIter result_first, RandomIter result_last) {
+            return hyn::stl::psort_copy_aux(first, last, result_first, result_last, distance_type(result_first));
+        }
+
+        template<class InputIter, class RandomIter, class Distance, class Compared>
+        RandomIter
+        psort_copy_aux(InputIter first, InputIter last, RandomIter result_first, RandomIter result_last, Distance *,
+                       Compared comp) {
+            if (result_first == result_last)
+                return result_last;
+            auto result_iter = result_first;
+            while (first != last && result_iter != result_last) {
+                *result_iter = *first;
+                ++result_iter;
+                ++first;
+            }
+            hyn::stl::make_heap(result_first, result_iter, comp);
+            while (first != last) {
+                if (comp(*first, *result_first)) {
+                    hyn::stl::adjust_heap(result_first, static_cast<Distance>(0), result_iter - result_first, *first,
+                                          comp);
+                }
+                ++first;
+            }
+            hyn::stl::sort_heap(result_first, result_iter, comp);
+            return result_iter;
+        }
+
+        template<class InputIter, class RandomIter, class Compared>
+        RandomIter
+        partial_sort_copy(InputIter first, InputIter last, RandomIter result_first, RandomIter result_last,
+                          Compared comp) {
+            return hyn::stl::psort_copy_aux(first, last, result_first, result_last, distance_type(result_first), comp);
+        }
+
+        /*****************************************************************************************/
+        // partition
+        template<class BidirectionalIter, class UnaryPredicate>
+        BidirectionalIter partition(BidirectionalIter first, BidirectionalIter last, UnaryPredicate unary_op) {
+            while (true) {
+                while (first != last && unary_op(*first))
+                    ++first;
+                if (first == last)
+                    break;
+                --last;
+                while (first != last && !unary_op(*last))
+                    --last;
+                if (first == last)
+                    break;
+                hyn::stl::iter_swap(first, last);
+            }
+            return first;
+        }
+
+        /*****************************************************************************************/
+        // partition_copy
+        template<class InputIter, class OutputIter1, class OutputIter2, class UnaryOP>
+        hyn::stl::pair<OutputIter1, OutputIter2> partition_copy(InputIter first, InputIter last, OutputIter1 res_ture,
+                                                                OutputIter2 res_false, UnaryOP unary_op) {
+            for (; first != last; ++first) {
+                if (unary_op(*first))
+                    *res_ture++ = *first;
+                else
+                    *res_false++ = *first;
+            }
+            return hyn::stl::pair<OutputIter1, OutputIter2>(res_ture, res_false);
+        }
+
+        /*****************************************************************************************/
+        // sort
+        constexpr static size_t kSmallSectionSize = 128;
+
+        template<class Size>
+        Size slg2(Size n) {
+            Size k = 0;
+            for (; n > 1; n >>= 1) {
+                ++k;
+            }
+            return k;
+        }
     }//namespace
 }//namespace
 
