@@ -1882,6 +1882,41 @@ namespace hyn {
                 hyn::stl::final_insertion_sort(first, last, comp);
             }
         }
+
+        /*****************************************************************************************/
+        // nth_element
+        template<class RandomIter>
+        void nth_element(RandomIter first, RandomIter nth, RandomIter last) {
+            if (nth == last)
+                return;
+            while (last - first > 3) {
+                auto cut = hyn::stl::unchecked_partition(first, last,
+                                                         hyn::stl::median(*first, *(first + (last - first) / 2)),
+                                                         *(last - 1));
+                if (cut <= nth)
+                    first = cut;
+                else
+                    last = cut;
+            }
+            hyn::stl::insertion_sort(first, last);
+        }
+
+        template<class RandomIter, class Compared>
+        void nth_element(RandomIter first, RandomIter nth,
+                         RandomIter last, Compared comp) {
+            if (nth == last)
+                return;
+            while (last - first > 3) {
+                auto cut = hyn::stl::unchecked_partition(first, last, hyn::stl::median(*first,
+                                                                                       *(first + (last - first) / 2),
+                                                                                       *(last - 1)), comp);
+                if (cut <= nth)
+                    first = cut;
+                else
+                    last = cut;
+            }
+            hyn::stl::insertion_sort(first, last, comp);
+        }
     }//namespace
 }//namespace
 
