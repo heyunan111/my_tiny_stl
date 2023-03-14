@@ -543,6 +543,74 @@ namespace hyn {
         };
 
         template<typename CharT, class Traits>
+        int basic_string<CharT, Traits>::compare(basic_string::size_type pos1, basic_string::size_type count1,
+                                                 basic_string::const_pointer s, basic_string::size_type count2) const {
+            return compare_cstr(buffer_ + pos1, hyn::stl::min(count1, size_ - pos1), s, count2);
+        }
+
+        template<typename CharT, class Traits>
+        int basic_string<CharT, Traits>::compare(basic_string::size_type pos1, basic_string::size_type count1,
+                                                 basic_string::const_pointer s) const {
+            return compare_cstr(buffer_ + pos1, hyn::stl::min(size_ - pos1, count1), s, char_traits::length(s));
+        }
+
+        template<typename CharT, class Traits>
+        int basic_string<CharT, Traits>::compare(basic_string::const_pointer s) const {
+            return compare_cstr(buffer_, size_, s, char_traits::length(s));
+        }
+
+        template<typename CharT, class Traits>
+        int basic_string<CharT, Traits>::compare(basic_string::size_type pos1, basic_string::size_type count1,
+                                                 const basic_string &other, basic_string::size_type pos2,
+                                                 basic_string::size_type count2) const {
+            return compare_cstr(buffer_ + pos1, hyn::stl::min(count1, size_ - pos1), other.buffer_,
+                                hyn::stl::min(count2, other.size_ - pos2));
+        }
+
+        template<typename CharT, class Traits>
+        int basic_string<CharT, Traits>::compare(basic_string::size_type pos1, basic_string::size_type count1,
+                                                 const basic_string &other) const {
+            return compare_cstr(buffer_ + pos1, hyn::stl::min(count1, size_ - pos1), other.buffer_, other.size_);
+        }
+
+        template<typename CharT, class Traits>
+        int basic_string<CharT, Traits>::compare(const basic_string &other) const {
+            return compare_cstr(buffer_, size_, other.buffer_, other.size_);
+        }
+
+        template<typename CharT, class Traits>
+        void basic_string<CharT, Traits>::resize(basic_string::size_type count, value_type n) {
+            if (count < size_)
+                erase(buffer_ + count, buffer_ + size_);
+            else
+                append(count - size_, n);
+        }
+
+        template<typename CharT, class Traits>
+        typename basic_string<CharT, Traits>::iterator
+        basic_string<CharT, Traits>::erase(basic_string::const_iterator first, basic_string::const_iterator last) {
+            if (first == begin() && last == end()) {
+                clear();
+                return end();
+            }
+            const size_type n = end() - last;
+            auto r = const_cast<iterator>(first);
+            char_traits::move(r, last, n);
+            size_ -= (last - first);
+            return r;
+        }
+
+        template<typename CharT, class Traits>
+        typename basic_string<CharT, Traits>::iterator
+        basic_string<CharT, Traits>::erase(basic_string::const_iterator pos) {
+            DEBUG(pos != end());
+            auto r = const_cast<iterator>(pos);
+            char_traits::move(r, pos + 1, end() - pos - 1);
+            --size_;
+            return r;
+        }
+
+        template<typename CharT, class Traits>
         basic_string<CharT, Traits> &
         basic_string<CharT, Traits>::append(basic_string::const_pointer s, basic_string::size_type count) {
             THROW_LENGTH_ERROR_IF(size_ > max_size() - count,
