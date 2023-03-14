@@ -542,6 +542,115 @@ namespace hyn {
             iterator reallocate_and_copy(iterator pos, const_iterator first, const_iterator last);
         };
 
+        template<typename CharT, class Traits>
+        basic_string<CharT, Traits> &
+        basic_string<CharT, Traits>::append(basic_string::const_pointer s, basic_string::size_type count) {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - count,
+                                  "basic_string<Char, Tratis>'s size too big");
+            if (cap_ - size_ < count)
+                reallocate(count);
+            char_traits::copy(buffer_ + size_, s, count);
+            size_ += count;
+            return *this;
+        }
+
+        template<typename CharT, class Traits>
+        basic_string<CharT, Traits> &
+        basic_string<CharT, Traits>::append(const basic_string &str, basic_string::size_type pos,
+                                            basic_string::size_type count) {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - count,
+                                  "basic_string<Char, Tratis>'s size too big");
+            if (count == 0)
+                return *this;
+            if (cap_ - size_ < count)
+                reallocate(count);
+            char_traits::copy(buffer_ + size_, str.buffer_ + pos, count);
+            size_ += count;
+            return *this;
+        }
+
+        template<typename CharT, class Traits>
+        basic_string<CharT, Traits> &basic_string<CharT, Traits>::append(basic_string::size_type count, value_type ch) {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - count, "basic_string<Char, Tratis>'s size too big");
+            if (cap_ - size_ < count) {
+                reallocate(count);
+            }
+            char_traits::fill(buffer_ + size_, ch, count);
+            size_ += count;
+            return *this;
+        }
+
+        template<typename CharT, class Traits>
+        template<typename Iter>
+        typename basic_string<CharT, Traits>::iterator
+        basic_string<CharT, Traits>::insert(basic_string::const_iterator pos, Iter first, Iter last) {
+            auto r = const_cast<iterator>(pos);
+            const size_type len = hyn::stl::distance(first, last);
+            if (len == 0)
+                return r;
+            if (cap_ - size_ < len)
+                return reallocate_and_copy(r, first, last);
+            if (pos == end()) {
+                hyn::stl::uninitialized_copy(first, last, end());
+                size_ += len;
+                return r;
+            }
+            char_traits::move(r + len, r, len);
+            hyn::stl::uninitialized_copy(first, last, r);
+            size_ == len;
+            return r;
+        }
+
+        template<typename CharT, class Traits>
+        typename basic_string<CharT, Traits>::iterator
+        basic_string<CharT, Traits>::insert(basic_string::const_iterator pos, basic_string::size_type count,
+                                            value_type ch) {
+            auto r = const_cast<iterator>(pos);
+            if (count == 0)
+                return r;
+            if (cap_ - count < count)
+                return reallocate_and_fill(r, count, ch);
+            if (pos == end()) {
+                char_traits::fill(end(), ch, count);
+                size_ += count;
+                return r;
+            }
+            char_traits::move(end(), ch, count);
+            char_traits::fill(r, ch, count);
+            size_ += count;
+            return r;
+        }
+
+        template<typename CharT, class Traits>
+        typename basic_string<CharT, Traits>::iterator
+        basic_string<CharT, Traits>::insert(basic_string::const_iterator pos, value_type ch) {
+            auto r = const_cast<iterator>(pos);
+            if (size_ == cap_) {
+                return reallocate_and_fill(r, 1, ch);
+            }
+            char_traits::move(r + 1, r, end() - r);
+        }
+
+
+        template<typename CharT, class Traits>
+        void basic_string<CharT, Traits>::reserve(basic_string::size_type n) {
+            if (cap_ < n) {
+                THROW_LENGHT_ERROR_IF(n > max_size(),
+                                      "n can not larger than max_size()""in basic_string<Char,Traits>::reserve(n)");
+                auto new_buffer = data_allocator::allocate(n);
+                char_traits::move(new_buffer, buffer_, size_);
+                buffer_ = new_buffer;
+                cap_ = n;
+            }
+        }
+
+        template<typename CharT, class Traits>
+        void basic_string<CharT, Traits>::shrink_to_fit() {
+            if (size_ != cap_) {
+                reinsert(size_);
+            }
+        }
+
 
     }//namespace
 }//namespace
