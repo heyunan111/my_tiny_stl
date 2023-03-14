@@ -234,15 +234,15 @@ namespace hyn {
     *  @tparam _CharT  Type of character
     *  @tparam _Traits  Traits for character type, defaults to char_traits<_CharT>.
     */
-        template<typename _CharT, class _Traits = hyn::stl::char_traits<_CharT>>
+        template<typename CharT, class Traits = hyn::stl::char_traits<CharT>>
         class basic_string {
 
         public:
-            typedef _Traits traits_type;
-            typedef _Traits char_traits;
+            typedef Traits traits_type;
+            typedef Traits char_traits;
 
-            typedef hyn::stl::allocator<_CharT> allocator_type;
-            typedef hyn::stl::allocator<_CharT> data_allocator;
+            typedef hyn::stl::allocator<CharT> allocator_type;
+            typedef hyn::stl::allocator<CharT> data_allocator;
 
             typedef typename allocator_type::value_type value_type;
             typedef typename allocator_type::pointer pointer;
@@ -261,8 +261,8 @@ namespace hyn {
                 return allocator_type();
             }
 
-            static_assert(std::is_pod<_CharT>::value, "Character type of basic_string must be a POD");
-            static_assert(std::is_same<_CharT, typename traits_type::char_type>::value,
+            static_assert(std::is_pod<CharT>::value, "Character type of basic_string must be a POD");
+            static_assert(std::is_same<CharT, typename traits_type::char_type>::value,
                           "CharType must be same as traits_type::char_type");
 
         public:
@@ -276,6 +276,8 @@ namespace hyn {
 
         public:
 
+            /*******************************************************************************************/
+            //iterator
             iterator begin() noexcept {
                 return buffer_;
             }
@@ -295,6 +297,209 @@ namespace hyn {
             reverse_iterator rbegin() noexcept {
                 return reverse_iterator(end());
             }
+
+            const_reverse_iterator rbegin() const noexcept {
+                return const_reverse_iterator(end());
+            }
+
+            reverse_iterator rend() noexcept {
+                return reverse_iterator(begin());
+            }
+
+            const_reverse_iterator rend() const noexcept {
+                return const_reverse_iterator(begin());
+            }
+
+            const_iterator cbegin() const noexcept {
+                return begin();
+            }
+
+            const_iterator cend() const noexcept {
+                return end();
+            }
+
+            const_reverse_iterator crbegin() const noexcept {
+                return rbegin();
+            }
+
+            const_reverse_iterator crend() const noexcept {
+                return rend();
+            }
+
+            /********************************************************************************************************/
+            //容器
+
+            bool empty() const noexcept {
+                return size_ == 0;
+            }
+
+            size_type size() const noexcept {
+                return size_;
+            }
+
+            size_type length() const noexcept {
+                return size_;
+            }
+
+            size_type capacity() const noexcept {
+                return cap_;
+            }
+
+            size_type max_size() const noexcept {
+                return static_cast<size_type>(-1);
+            }
+
+            void reserve(size_type n);
+
+            void shrink_to_fit();
+
+            /****************************************************************************************************/
+            //访问
+
+            reference operator[](size_type n) {
+                DEBUG(n <= size_);
+                if (n == size_)
+                    *(buffer_ + n) = value_type();
+                return *(buffer_ + n);
+            }
+
+            const_reference operator[](size_type n) const {
+                MYSTL_DEBUG(n <= size_);
+                if (n == size_)
+                    *(buffer_ + n) = value_type();
+                return *(buffer_ + n);
+            }
+
+            reference at(size_type n) {
+                THROW_OUT_OF_RANGE_IF(n >= size_, "basic_string<Char, Traits>::at()""subscript out of range");
+                return (*this)[n];
+            }
+
+            const_reference at(size_type n) const {
+                THROW_OUT_OF_RANGE_IF(n >= size_, "basic_string<Char, Traits>::at()""subscript out of range");
+                return (*this)[n];
+            }
+
+            reference front() {
+                DEBUG(!empty());
+                return *begin();
+            }
+
+            const_reference front() const {
+                DEBUG(!empty());
+                return *begin();
+            }
+
+            reference back() {
+                DEBUG(!empty());
+                return *(end() - 1);
+            }
+
+            const_reference back() const {
+                DEBUG(!empty());
+                return *(end() - 1);
+            }
+
+            const_pointer data() const noexcept { return to_raw_pointer(); }
+
+            const_pointer c_str() const noexcept { return to_raw_pointer(); }
+
+
+            /****************************************************************************************************/
+            //添加删除
+
+            iterator insert(const_iterator pos, value_type ch);
+
+            iterator insert(const_iterator pos, size_type count, value_type ch);
+
+            template<typename Iter>
+            iterator insert(const_iterator pos, Iter first, Iter last);
+
+            basic_string &append(size_type count, value_type ch);
+
+            basic_string &append(const basic_string &str, size_type pos, size_type count);
+
+            basic_string &append(const_pointer s, size_type count);
+
+            basic_string &append(const basic_string &str) {
+                return append(str, 0, str.size_);
+            }
+
+            basic_string &append(const basic_string &str, size_type pos) {
+                return append(str, pos, str.size_ - pos);
+            }
+
+            basic_string &append(const_pointer s) {
+                return append(s, char_traits::length(s));
+            }
+
+            template<typename Iter, typename std::enable_if<hyn::stl::is_input_iterator<Iter>::value, int>::type = 0>
+            basic_string &append(Iter first, Iter last) {
+                return append_range(first, last);
+            }
+
+            iterator erase(const_iterator pos);
+
+            iterator erase(const_iterator first, const_iterator last);
+
+            void resize(size_type count, value_type n);
+
+            void resize(size_type count) {
+                resize(count, value_type());
+            }
+
+            void clear() noexcept {
+                size_ = 0;
+            }
+
+            /********************************************************************************************************/
+            //compare
+
+            int compare(const basic_string &other) const;
+
+            int compare(size_type pos1, size_type count1, const basic_string &other) const;
+
+            int compare(size_type pos1, size_type count1, const basic_string &other, size_type pos2,
+                        size_type count2 = npos) const;
+
+            int compare(const_pointer s) const;
+
+            int compare(size_type pos1, size_type count1, const_pointer s) const;
+
+            int compare(size_type pos1, size_type count1, const_pointer s, size_type count2) const;
+
+            /******************************************************************************************************/
+            //substr
+            basic_string substr(size_type index, size_type count = npos) {
+                count = hyn::stl::min(count, size_ - index);
+                return basic_string(buffer_ + index, buffer_ + index + count);
+            }
+
+            /******************************************************************************************************/
+            //replace
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private:
 
@@ -337,64 +542,6 @@ namespace hyn {
             iterator reallocate_and_copy(iterator pos, const_iterator first, const_iterator last);
         };
 
-        /***********************************************/
-        //try_init
 
-        template<typename _CharT, typename _Trait>
-        void basic_string<_CharT, _Trait>::try_init() noexcept {
-            try {
-                buffer_ = data_allocator::allocate(static_cast<size_type>(STRING_INIT_SIZE));
-                size_ = 0;
-                cap_ = 0;
-            } catch (...) {
-                buffer_ = nullptr;
-                size_ = 0;
-                cap_ = 0;
-            }
-        }
-
-        template<typename _CharT, typename _Trait>
-        void basic_string<_CharT, _Trait>::fill_init(size_type n, value_type ch) {
-            const auto init_size = hyn::stl::max(static_cast<size_type>(STRING_INIT_SIZE), n + 1);
-            buffer_ = data_allocator::allocate(init_size);
-            char_traits::fill(buffer_, ch, n);
-            size_ = n;
-            cap_ = init_size;
-        }
-
-        /* template<typename _CharT, typename _Trait>
-         template<class Iter>
-         void basic_string<_CharT, _Trait>::copy_init(Iter first, Iter last, hyn::stl::input_iterator_tag) {
-
-         }
-
-         template<typename Iter>
-         void copy_init(Iter first, Iter last, hyn::stl::forward_iterator_tag);
-
-         void init_from(const_pointer src, size_type pos, size_type n);
-
-         void destroy_buffer();*/
-
-        /*const_pointer to_raw_pointer() const;
-
-        void reinsert(size_type size);
-
-        template<typename Iter>
-        basic_string &append_range(Iter first, Iter last);
-
-        int compare_cstr(const_pointer s1, size_type n1, const_pointer s2, size_type n2) const;
-
-        basic_string &replace_cstr(const_iterator first, size_type count1, const_pointer str, size_type count2);
-
-        basic_string &replace_fill(const_iterator first, size_type count1, size_type count2, value_type ch);
-
-        template<class Iter>
-        basic_string &replace_copy(const_iterator first, const_iterator last, Iter first2, Iter last2);
-
-        void reallocate(size_type need);
-
-        iterator reallocate_and_fill(iterator pos, size_type n, value_type ch);
-
-        iterator reallocate_and_copy(iterator pos, const_iterator first, const_iterator last);*/
     }//namespace
 }//namespace
