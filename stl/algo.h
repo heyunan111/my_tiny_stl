@@ -1917,6 +1917,86 @@ namespace hyn {
             }
             hyn::stl::insertion_sort(first, last, comp);
         }
+
+        /*****************************************************************************************/
+        // unique_copy
+
+        template<class InputIter, class ForwardIter>
+        ForwardIter unique_copy_dispatch(InputIter first, InputIter last, ForwardIter result, forward_iterator_tag) {
+            *result = *first;
+            while (++first != last) {
+                if (*result != *first) {
+                    *++result = *first;
+                }
+            }
+            return ++result;
+        }
+
+        template<class InputIter, class OutputIter>
+        OutputIter unique_copy_dispatch(InputIter first, InputIter last, OutputIter result, output_iterator_tag) {
+            auto value = *first;
+            *result = value;
+            while (++first != last) {
+                if (value != *first) {
+                    value = *result;
+                    *++result = value;
+                }
+            }
+            return ++result;
+        }
+
+        template<class InputIter, class OutputIter>
+        OutputIter unique_copy(InputIter first, InputIter last, OutputIter result) {
+            if (first == last)
+                return last;
+            return hyn::stl::unique_copy_dispatch(first, last, result, iterator_category(result));
+        }
+
+        template<class InputIter, class ForwardIter, class Compared>
+        ForwardIter
+        unique_copy_dispatch(InputIter first, InputIter last, ForwardIter result, forward_iterator_tag, Compared comp) {
+            *result = *first;
+            while (++first != last) {
+                if (!comp(*result, *first))
+                    *++result = *first;
+            }
+            return ++result;
+        }
+
+        template<class InputIter, class OutputIter, class Compared>
+        OutputIter
+        unique_copy_dispatch(InputIter first, InputIter last, OutputIter result, output_iterator_tag, Compared comp) {
+            auto value = *first;
+            *result = value;
+            while (++first != last) {
+                if (!comp(value, *first)) {
+                    value = *first;
+                    *++result = value;
+                }
+            }
+            return ++result;
+        }
+
+        template<class InputIter, class OutputIter, class Compared>
+        OutputIter unique_copy(InputIter first, InputIter last, OutputIter result, Compared comp) {
+            if (first == last)
+                return result;
+            return hyn::stl::unique_copy_dispatch(first, last, result, iterator_category(result), comp);
+        }
+
+        /*****************************************************************************************/
+        // unique
+        template<class ForwardIter>
+        ForwardIter unique(ForwardIter first, ForwardIter last) {
+            first = hyn::stl::adjacent_find(first, last);
+            return hyn::stl::unique_copy(first, last, first);
+        }
+
+        template<class ForwardIter, class Comp>
+        ForwardIter unique(ForwardIter first, ForwardIter last, Comp comp) {
+            first = hyn::stl::adjacent_find(first, last, comp);
+            return hyn::stl::unique_copy(first, last, first, comp);
+        }
     }//namespace
 }//namespace
 
